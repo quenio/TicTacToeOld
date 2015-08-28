@@ -43,7 +43,7 @@ public:
         return _empty;
     }
 
-    void copyMark(GameSlot & gameSlot)
+    void copyMark(const GameSlot & gameSlot)
     {
         this->_empty = gameSlot._empty;
         this->_playerMarker = gameSlot._playerMarker;
@@ -62,7 +62,7 @@ public:
         }
     }
 
-    friend bool operator == (GameSlot & lhs, GameSlot & rhs);
+    friend bool operator == (const GameSlot & lhs, const GameSlot & rhs);
     friend ostream & operator << (ostream &os, const GameSlot &gameSlot);
 
 private:
@@ -72,7 +72,7 @@ private:
 
 };
 
-bool operator == (GameSlot & lhs, GameSlot & rhs)
+inline bool operator == (const GameSlot & lhs, const GameSlot & rhs)
 {
     if (lhs._empty || rhs._empty)
     {
@@ -84,7 +84,7 @@ bool operator == (GameSlot & lhs, GameSlot & rhs)
     }
 }
 
-ostream & operator << (ostream &os, const GameSlot &gameSlot) {
+inline ostream & operator << (ostream &os, const GameSlot &gameSlot) {
     if (gameSlot.isEmpty()) {
         os << "[ ]";
     }
@@ -394,8 +394,6 @@ public:
         return gameBoard.mark(play.line(), play.column(), _marker);
     }
 
-private:
-    int _counter = 0;
 };
 
 class HumanPlayer: public Player
