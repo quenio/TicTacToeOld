@@ -511,39 +511,97 @@ public:
 
 };
 
+class Game
+{
+public:
+
+    shared_ptr<Player> ai() { return _ai; }
+
+    shared_ptr<Player> human() { return _human; }
+
+    void startWithPlayer(shared_ptr<Player> initialPlayer)
+    {
+        resetGame(initialPlayer);
+        displayGameStarted();
+        while (inProgress())
+        {
+            doPlay();
+            displayCurrentPlay();
+            alternatePlayer();
+        }
+        displayFinalResult();
+    }
+
+private:
+
+    void resetGame(shared_ptr<Player> initialPlayer)
+    {
+        if (initialPlayer == nullptr)
+        {
+            throw runtime_error { "Initial player not defined." };
+        }
+
+        _currentPlayer = initialPlayer;
+        _currentBoard = _initialBoard;
+        _playCount = 0;
+    }
+
+    bool inProgress()
+    {
+        return not _currentBoard.isGameOver();
+    }
+
+    void doPlay()
+    {
+        _currentBoard = _currentPlayer->play(_currentBoard);
+        _playCount++;
+    }
+
+    void alternatePlayer()
+    {
+        _currentPlayer = (_currentPlayer == _ai ? _human : _ai);
+    }
+
+    void displayGameStarted()
+    {
+        cout << "Gamed Started!" << endl << endl << _initialBoard << endl;
+    }
+
+    void displayCurrentPlay()
+    {
+        cout << "Play No.: " << _playCount << " (" << _currentPlayer->name() << ")" << endl << endl << _currentBoard << endl;
+    }
+
+    void displayFinalResult()
+    {
+        if (_currentBoard.isDraw())
+        {
+            cout << "Wow!!! What a draw!!!";
+        }
+        else if (_currentBoard.winner() == X)
+        {
+            cout << "YESS!!! The Exterminator wins again!!!" << endl ;
+        }
+        else
+        {
+            cout << "Congrats!!! You WON!!!" << endl;
+        }
+    }
+
+    shared_ptr<Player> _ai { new AIPlayer() };
+    shared_ptr<Player> _human { new HumanPlayer() };
+    shared_ptr<Player> _currentPlayer;
+
+    GameBoard _initialBoard, _currentBoard;
+    int _playCount;
+};
+
 int main()
 {
-    shared_ptr<Player> ai { new AIPlayer() };
-    shared_ptr<Player> human { new HumanPlayer() };
-    GameBoard initialBoard;
+    // TODO Pass in players; have generic messages for final results.
+    Game game;
 
-    cout << "Gamed Started!" << endl << endl << initialBoard << endl;
-
-    int playCount = 0;
-    shared_ptr<Player> currentPlayer = human;
-    GameBoard currentBoard = initialBoard;
-
-    while (!currentBoard.isGameOver())
-    {
-        currentBoard = currentPlayer->play(currentBoard);
-
-        cout << "Play No.: " << ++playCount << " (" << currentPlayer->name() << ")" << endl << endl << currentBoard << endl;
-
-        currentPlayer = (currentPlayer == ai ? human : ai);
-    }
-
-    if (currentBoard.isDraw())
-    {
-        cout << "Wow!!! What a draw!!!";
-    }
-    else if (currentBoard.winner() == X)
-    {
-        cout << "YESS!!! The Exterminator wins again!!!" << endl ;
-    }
-    else
-    {
-        cout << "Congrats!!! You WON!!!" << endl;
-    }
+    game.startWithPlayer(game.ai());
 
     return 0;
 }
