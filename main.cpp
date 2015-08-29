@@ -38,6 +38,18 @@ public:
         return _empty;
     }
 
+    PlayerMarker playerMarker() const
+    {
+        if (isEmpty())
+        {
+            throw runtime_error { "Game slot is empty." };
+        }
+        else
+        {
+            return _playerMarker;
+        }
+    }
+
     friend class GameBoard;
     friend bool operator == (const GameSlot & lhs, const GameSlot & rhs);
 
@@ -114,6 +126,11 @@ public:
 
     bool isGameOver() const
     {
+        return hasWinner() or allLegalPlays().size() == 0;
+    }
+
+    bool hasWinner() const
+    {
         for (int line = 0; line < GameBoard::LINE_COUNT; line++) {
             if (isLineMatch(line)) {
                 return true;
@@ -131,6 +148,33 @@ public:
         }
 
         return false;
+    }
+
+    bool isDraw() const
+    {
+        return isGameOver() and not hasWinner();
+    }
+
+
+    PlayerMarker winner() const
+    {
+        for (int line = 0; line < GameBoard::LINE_COUNT; line++) {
+            if (isLineMatch(line)) {
+                return _slots[line][0].playerMarker();
+            }
+        }
+
+        for (int column = 0; column < GameBoard::COLUMN_COUNT; column++) {
+            if (isColumnMatch(column)) {
+                return _slots[0][column].playerMarker();
+            }
+        }
+
+        if (isDiagonalMatch()) {
+            return _slots[1][1].playerMarker();
+        }
+
+        throw runtime_error { "Game has no winner yet." };
     }
 
     bool isLineMatch(int line) const {
@@ -259,8 +303,13 @@ class Player
 {
 public:
 
-    Player(PlayerMarker marker) : _marker(marker) { }
+    Player(const string & name, const PlayerMarker & marker) : _name { name },  _marker { marker}
+    {
+    }
+
     virtual ~Player() {}
+
+    string name() { return _name; }
 
     virtual GameBoard play(GameBoard & gameBoard) = 0;
 
@@ -268,6 +317,7 @@ public:
 
 protected:
 
+    const string _name;
     const PlayerMarker _marker;
 
 };
@@ -304,6 +354,8 @@ public:
 
     int score() const { return _gameBoard.score(); }
 
+    bool isGameOver() const { return _gameBoard.isGameOver(); }
+
 private:
 
     const GamePlay _gamePlay;
@@ -339,13 +391,14 @@ private:
 
     int minMax(GameNode node, PlayerMarker playerMarker)
     {
-        const vector<GameNode> children = node.childrenFor(playerMarker);
-
-        if (children.size() == 0)
+        if (node.isGameOver())
         {
             return node.score();
         }
-        else if (maxTurn(playerMarker))
+
+        const vector<GameNode> children = node.childrenFor(playerMarker);
+
+        if (maxTurn(playerMarker))
         {
             return max(children, adversaryOf(playerMarker));
         }
@@ -390,7 +443,7 @@ private:
 class AIPlayer: public Player
 {
 public:
-    AIPlayer(): Player { X }
+    AIPlayer(): Player { "Exterminator",  X }
     {
     }
 
@@ -406,7 +459,7 @@ public:
 class HumanPlayer: public Player
 {
 public:
-    HumanPlayer(): Player { O }
+    HumanPlayer(): Player { "Charlie Brown", O }
     {
     }
 
@@ -445,9 +498,22 @@ int main()
     {
         currentBoard = currentPlayer->play(currentBoard);
 
-        cout << "Play No.: " << ++playCount << endl << endl << currentBoard << endl;
+        cout << "Play No.: " << ++playCount << " (" << currentPlayer->name() << ")" << endl << endl << currentBoard << endl;
 
         currentPlayer = (currentPlayer == ai ? human : ai);
+    }
+
+    if (currentBoard.isDraw())
+    {
+        cout << "Wow!!! What a draw!!!";
+    }
+    if (currentBoard.winner() == X)
+    {
+        cout << "YESS!!! The Exterminator wins again!!!" << endl ;
+    }
+    else
+    {
+        cout << "Congrats!!! You WON!!!" << endl;
     }
 
     return 0;
