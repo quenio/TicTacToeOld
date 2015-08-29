@@ -3,6 +3,8 @@
 
 using namespace std;
 
+static bool DEBUG = false;
+
 enum PlayerMarker {
     X, O
 };
@@ -112,10 +114,20 @@ public:
     int line() const { return _line; }
     int column() const { return _column; }
 
+    friend ostream & operator << (ostream &os, const GamePlay &gamePlay);
+
 private:
+
     int _line;
     int _column;
+
 };
+
+ostream & operator << (ostream &os, const GamePlay &gamePlay)
+{
+    os << "(" << gamePlay._line << "," << gamePlay._column << ")";
+    return os;
+}
 
 class GameBoard
 {
@@ -289,9 +301,12 @@ private:
 
 };
 
-ostream & operator << (ostream &os, const GameBoard &gameBoard) {
-    for (int line = 0; line < GameBoard::LINE_COUNT; line++) {
-        for (int column = 0; column < GameBoard::COLUMN_COUNT; column++) {
+ostream & operator << (ostream &os, const GameBoard &gameBoard)
+{
+    for (int line = 0; line < GameBoard::LINE_COUNT; line++)
+    {
+        for (int column = 0; column < GameBoard::COLUMN_COUNT; column++)
+        {
             os << gameBoard._slots[line][column] << " ";
         }
         os << endl;
@@ -356,12 +371,20 @@ public:
 
     bool isGameOver() const { return _gameBoard.isGameOver(); }
 
+    friend ostream & operator << (ostream &os, const GameNode &gameNode);
+
 private:
 
     const GamePlay _gamePlay;
     const GameBoard _gameBoard;
 
 };
+
+ostream & operator << (ostream &os, const GameNode &gameNode)
+{
+    os << gameNode._gameBoard << " " << gameNode._gamePlay;
+    return os;
+}
 
 class GameTree {
 public:
@@ -379,6 +402,12 @@ public:
             {
                 maxScore = score;
                 bestPlay = gameNode.play();
+            }
+
+            if (DEBUG)
+            {
+                cout << "DEBUG: Score: " << score << endl;
+                cout << "DEBUG: GameNode:" << endl << gameNode << endl << endl;
             }
         }
         return bestPlay;
@@ -428,7 +457,7 @@ private:
         for (const auto &gameNode : children)
         {
             int score = minMax(gameNode, playerMarker);
-            if (score > minScore)
+            if (score < minScore)
             {
                 minScore = score;
             }
@@ -507,7 +536,7 @@ int main()
     {
         cout << "Wow!!! What a draw!!!";
     }
-    if (currentBoard.winner() == X)
+    else if (currentBoard.winner() == X)
     {
         cout << "YESS!!! The Exterminator wins again!!!" << endl ;
     }
